@@ -584,7 +584,7 @@ def create_sidebar_journey_finder(data):
     ''', unsafe_allow_html=True)
     
     # Action selection with vintage buttons
-    st.sidebar.markdown('<div style="font-family: \'Bebas Neue\', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: #FAF7F0; margin-bottom: 1rem;">Type of Adventure</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="font-family: \'Bebas Neue\', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: #2C2416; margin-bottom: 1rem;">Type of Adventure</div>', unsafe_allow_html=True)
     
     col1, col2 = st.sidebar.columns(2)
     with col1:
@@ -605,7 +605,7 @@ def create_sidebar_journey_finder(data):
     st.sidebar.markdown("---")
     
     # Location input with vintage styling
-    st.sidebar.markdown('<div style="font-family: \'Bebas Neue\', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: #FAF7F0; margin-bottom: 1rem;">Your Starting Location</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="font-family: \'Bebas Neue\', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: #2C2416; margin-bottom: 1rem;">Your Starting Location</div>', unsafe_allow_html=True)
     
     # Address input
     address = st.sidebar.text_input(
@@ -625,7 +625,7 @@ def create_sidebar_journey_finder(data):
     # Bike type selection (only for rent)
     if current_action == 'rent':
         st.sidebar.markdown("---")
-        st.sidebar.markdown('<div style="font-family: \'Bebas Neue\', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: #FAF7F0; margin-bottom: 1rem;">Bicycle Preference</div>', unsafe_allow_html=True)
+        st.sidebar.markdown('<div style="font-family: \'Bebas Neue\', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: #2C2416; margin-bottom: 1rem;">Bicycle Preference</div>', unsafe_allow_html=True)
         
         bike_type = st.sidebar.radio(
             "Choose bike type:",
