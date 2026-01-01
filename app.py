@@ -16,7 +16,7 @@ st.set_page_config(
     page_title="Toronto Bike Share | A Journey Through the City",
     page_icon="🚲",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # Vintage transit poster CSS
@@ -162,8 +162,8 @@ def main():
     # Status section
     create_status_section(data)
     
-    # Find ride section
-    create_find_ride_section(data)
+    # Sidebar for bike finding
+    create_sidebar_find_bike(data)
     
     # Map section
     create_map_section(data)
@@ -215,19 +215,23 @@ def create_status_section(data):
     with col1:
         st.markdown(f'''
         <div class="metric-card hero-card">
-            <div class="card-label">Bikes Ready to Ride</div>
+            <div class="card-label">Bikes Available Now</div>
             <div class="card-number">{total_bikes:,}</div>
             <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; display: inline-block;">System-wide Availability</div>
         </div>
         ''', unsafe_allow_html=True)
     
+    # Calculate ebike metrics
+    total_ebikes = data['ebike'].sum()
+    stations_with_ebikes = len(data[data['ebike'] > 0])
+    
     with col2:
-        st.markdown('''
+        st.markdown(f'''
         <div class="metric-card warning-card">
             <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-            <div class="card-label">Electric Bikes</div>
-            <div style="font-family: 'Bebas Neue', Arial Black, sans-serif; font-size: 2rem; font-weight: 700; margin: 1rem 0;">COMING SOON</div>
-            <p style="font-size: 0.875rem; opacity: 0.9;">E-bikes temporarily unavailable</p>
+            <div class="card-label">E-Bikes Available Now</div>
+            <div style="font-family: 'Bebas Neue', Arial Black, sans-serif; font-size: 2rem; font-weight: 700; margin: 1rem 0;">{total_ebikes:,}</div>
+            <p style="font-size: 0.875rem; opacity: 0.9;">{stations_with_ebikes} stations with e-bikes</p>
         </div>
         ''', unsafe_allow_html=True)
     
@@ -248,13 +252,122 @@ def create_status_section(data):
     with col2:
         st.markdown(f'''
         <div class="metric-card info-card">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🅿��</div>
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
             <div class="card-label">Docking Stations</div>
             <div class="card-number">{stations_with_docks}</div>
             <div style="font-size: 1.5rem; opacity: 0.8;">/{total_stations}</div>
             <div style="font-size: 0.875rem; margin-top: 0.5rem; font-weight: 600;">{dock_availability_rate:.1f}% Available</div>
         </div>
         ''', unsafe_allow_html=True)
+
+def create_sidebar_find_bike(data):
+    """Create the find bike functionality in the sidebar"""
+    
+    # Sidebar header with vintage styling
+    st.sidebar.markdown('''
+    <div style="
+        background: linear-gradient(135deg, #922b0d 0%, #7a2409 100%);
+        color: white;
+        padding: 1.5rem 1rem;
+        margin: -1rem -1rem 2rem -1rem;
+        text-align: center;
+        border-radius: 0 0 15px 15px;
+    ">
+        <h2 style="
+            font-family: 'Bebas Neue', Arial Black, sans-serif; 
+            font-size: 1.8rem; 
+            margin: 0; 
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        ">🚲 Find Your Ride</h2>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.9;">
+            Get started in seconds
+        </p>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Action selection
+    st.sidebar.markdown("### What do you need?")
+    
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("🚲 Rent", key="rent_btn", use_container_width=True):
+            st.session_state.action = "rent"
+    
+    with col2:
+        if st.button("🔒 Return", key="return_btn", use_container_width=True):
+            st.session_state.action = "return"
+    
+    # Show current selection
+    current_action = st.session_state.get('action', 'rent')
+    if current_action == 'rent':
+        st.sidebar.success("🚲 **Renting a bike**")
+    else:
+        st.sidebar.info("🔒 **Returning a bike**")
+    
+    st.sidebar.markdown("---")
+    
+    # Location input
+    st.sidebar.markdown("### Where are you?")
+    
+    # Geolocation button
+    if st.sidebar.button("📍 Use My Location", key="geo_btn", use_container_width=True):
+        st.sidebar.info("🔄 Geolocation coming soon! Enter address below.")
+    
+    # Address input
+    address = st.sidebar.text_input(
+        "Street Address", 
+        placeholder="123 Queen Street West, Toronto",
+        help="Enter your street address in Toronto"
+    )
+    
+    # City and Province (auto-filled)
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        city = st.text_input("City", value="Toronto", disabled=True)
+    with col2:
+        province = st.text_input("Province", value="Ontario", disabled=True)
+    
+    # Bike type selection (only for rent)
+    if current_action == 'rent':
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### Bike Preference")
+        
+        bike_type = st.sidebar.radio(
+            "Choose bike type:",
+            ["Any Available", "Mechanical Only", "E-Bike Only"],
+            key="bike_type_radio"
+        )
+        
+        # Map radio selection to session state
+        if bike_type == "E-Bike Only":
+            st.session_state.bike_type = "ebike"
+        elif bike_type == "Mechanical Only":
+            st.session_state.bike_type = "mechanical"
+        else:
+            st.session_state.bike_type = "any"
+    
+    st.sidebar.markdown("---")
+    
+    # Action button
+    action_text = "🚀 Find My Bike!" if current_action == 'rent' else "🎯 Find a Dock!"
+    
+    if st.sidebar.button(action_text, key="journey_btn", use_container_width=True, type="primary"):
+        if address.strip():
+            with st.spinner(f'🔍 Finding your {current_action}...'):
+                process_location_request(address, city, province, current_action, data)
+        else:
+            st.sidebar.error("⚠️ Please enter your street address")
+    
+    # Help section
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 💡 Tips")
+    st.sidebar.markdown("""
+    - **E-bikes** may be limited in winter
+    - **Popular areas** fill up quickly
+    - **Check the map** for real-time availability
+    - **Docks** are needed to return bikes
+    """)
 
 def create_find_ride_section(data):
     """Create the find ride section with exact design match"""
@@ -316,17 +429,18 @@ def create_find_ride_section(data):
                     st.session_state.bike_type = "mechanical"
             
             with col_ebike:
-                st.markdown('<button style="width: 100%; padding: 0.75rem; background: #F5F5F5; color: #999; border: 2px solid #E5E5E5; border-radius: 4px; font-weight: 600; cursor: not-allowed;" disabled>E-Bike (Unavailable)</button>', unsafe_allow_html=True)
+                if st.button("E-Bike", key="ebike_btn", use_container_width=True):
+                    st.session_state.bike_type = "ebike"
         
         # Action button with custom styling
-        action_text = "✈�� BEGIN YOUR JOURNEY" if st.session_state.get('action') == 'rent' else "✈�� FIND A DOCK"
+        action_text = "🚀 BEGIN YOUR JOURNEY" if st.session_state.get('action') == 'rent' else "🎯 FIND A DOCK"
         
         st.markdown('<div style="margin-top: 2rem;">', unsafe_allow_html=True)
         if st.button(action_text, key="journey_btn", use_container_width=True):
             if address.strip():
                 process_location_request(address, city, province, st.session_state.get('action', 'rent'), data)
             else:
-                st.error("⚠�� Please enter your street address")
+                st.error("⚠️ Please enter your street address")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
@@ -374,7 +488,9 @@ def create_map_section(data):
             fill_opacity=0.7,
             popup=folium.Popup(
                 f"<b>Station:</b> {row.get('name', row['station_id'])}<br>"
-                f"<b>Bikes:</b> {row['num_bikes_available']}<br>"
+                f"<b>Total Bikes:</b> {row['num_bikes_available']}<br>"
+                f"<b>E-bikes:</b> {row['ebike']}<br>"
+                f"<b>Mechanical:</b> {row['mechanical']}<br>"
                 f"<b>Docks:</b> {row['num_docks_available']}", 
                 max_width=300
             )
@@ -468,14 +584,25 @@ def process_location_request(address, city, province, action, data):
                 return
             
             if action == "rent":
-                chosen_station = get_bike_availability(user_location, data, ["mechanical"])
+                # Get selected bike type from session state
+                bike_type = st.session_state.get('bike_type', 'any')
+                if bike_type == 'ebike':
+                    chosen_station = get_bike_availability(user_location, data, ["ebike"])
+                elif bike_type == 'mechanical':
+                    chosen_station = get_bike_availability(user_location, data, ["mechanical"])
+                else:  # any
+                    chosen_station = get_bike_availability(user_location, data, ["mechanical", "ebike"])
             else:
                 chosen_station = get_dock_availability(user_location, data)
             
             if chosen_station:
                 display_route_result(user_location, chosen_station, data, action)
             else:
-                st.warning(f"⚠�� No {'bikes' if action == 'rent' else 'docks'} available nearby.")
+                bike_type_text = st.session_state.get('bike_type', 'mechanical')
+                if action == 'rent':
+                    st.warning(f"⚠️ No {bike_type_text} {'bikes' if action == 'rent' else 'docks'} available nearby. Try selecting a different bike type.")
+                else:
+                    st.warning(f"⚠️ No {'bikes' if action == 'rent' else 'docks'} available nearby.")
                 
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
@@ -494,14 +621,14 @@ def display_route_result(user_location, chosen_station, data, action):
             fill=True,
             fill_color=marker_color,
             fill_opacity=0.8,
-            popup=f"Bikes: {row['num_bikes_available']}<br>Docks: {row['num_docks_available']}"
+            popup=f"Bikes: {row['num_bikes_available']}<br>E-bikes: {row['ebike']}<br>Mechanical: {row['mechanical']}<br>Docks: {row['num_docks_available']}"
         ).add_to(m)
     
     # Add user and chosen station
     folium.Marker(user_location, popup="📍 You are here", icon=folium.Icon(color="blue")).add_to(m)
     folium.Marker(
         (chosen_station[1], chosen_station[2]), 
-        popup=f"{'🚲 Get bike' if action == 'rent' else '🅿�� Return bike'} here",
+        popup=f"{'🚲 Get bike' if action == 'rent' else '🔒 Return bike'} here",
         icon=folium.Icon(color="red")
     ).add_to(m)
     

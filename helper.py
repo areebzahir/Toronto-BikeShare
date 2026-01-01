@@ -41,7 +41,19 @@ def query_station_status(url):
             }
             
             # Parse vehicle types if available
-            if 'vehicle_types_available' in station:
+            if 'num_bikes_available_types' in station:
+                bike_types = station['num_bikes_available_types']
+                if isinstance(bike_types, dict):
+                    ebike_count = bike_types.get('ebike', 0)
+                    mechanical_count = bike_types.get('mechanical', 0)
+                else:
+                    ebike_count = 0
+                    mechanical_count = station['num_bikes_available']
+                
+                station_info['ebike'] = ebike_count
+                station_info['mechanical'] = mechanical_count
+            elif 'vehicle_types_available' in station:
+                # Fallback for older API format
                 ebike_count = 0
                 mechanical_count = 0
                 
@@ -54,7 +66,7 @@ def query_station_status(url):
                 station_info['ebike'] = ebike_count
                 station_info['mechanical'] = mechanical_count
             else:
-                # Fallback if vehicle types not available
+                # Fallback if no vehicle type data available
                 station_info['ebike'] = 0
                 station_info['mechanical'] = station['num_bikes_available']
             
