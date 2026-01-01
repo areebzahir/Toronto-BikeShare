@@ -1,30 +1,23 @@
 # 🚲 Toronto Bike Share Dashboard
 
-A real-time Streamlit web application for tracking bike availability at Toronto bike share stations with multiple design themes.
+A real-time Streamlit web application for tracking bike availability at Toronto bike share stations with authentic vintage design themes.
 
 ## 🎨 Available Versions
 
-### 1. **Main App** (`app.py`) - Compact Vintage Design
-- **Real-time Data**: Live bike availability across all Toronto bike share stations
-- **Interactive Maps**: Visual representation of station locations and availability
-- **Smart Search**: Find the nearest bike or dock based on your location
-- **E-bike Support**: Full integration with electric bike data
+### 1. **Poster App** (`poster_app.py`) - Authentic Vintage Transit Poster ⭐
+- **1950s-60s Aesthetic**: Inspired by mid-century travel posters and transit signage
+- **Authentic Typography**: Bebas Neue, Crimson Text, and Special Elite fonts
+- **Vintage Color Palette**: Aged paper, heritage blues, vintage greens, rust reds
+- **Narrative Design**: Story-driven interface with "Begin Your Urban Journey"
+- **Torn Paper Cards**: Asymmetrical layout with decorative corners and layered shadows
+- **Heritage Frames**: Double borders and vintage document styling
+
+### 2. **Main App** (`app.py`) - Compact Vintage Design
+- **Real-time Data**: Live bike availability with sidebar navigation
+- **E-bike Support**: Full integration with electric bike data (40+ e-bikes)
 - **Compact Layout**: Optimized spacing for better page fit
-- **Sidebar Navigation**: Clean slide-right menu for bike finding
-
-### 2. **Modern App** (`modern_app.py`) - Professional Design
-- **Sleek Interface**: Clean, modern design with Inter font
-- **Bento-box Layout**: Dynamic grid with visual hierarchy
-- **High Contrast**: Accessible color palette (dark blue, green, orange)
-- **Micro-interactions**: Hover effects and smooth transitions
-- **Mobile Responsive**: Adapts from multi-column to single-column on mobile
-
-### 3. **Simple Vintage App** (`simple_vintage_app.py`) - Retro Design
-- **Mid-century Aesthetic**: Inspired by 1950s travel posters
-- **Vintage Typography**: Anton and Special Elite fonts
-- **Retro Color Palette**: Mustard yellows, dusty teals, terracotta
-- **Flip-clock Cards**: Mechanical display styling
-- **Nostalgic Interface**: Vintage control panel design
+- **Interactive Maps**: Visual station locations with route planning
+- **Smart Search**: Find nearest bike or dock based on location
 
 ## Features
 
@@ -33,6 +26,7 @@ A real-time Streamlit web application for tracking bike availability at Toronto 
 - **Bike Type Filtering**: Choose between e-bikes, mechanical bikes, or any available
 - **Station Details**: Comprehensive information including bike types and dock availability
 - **Live Updates**: Data refreshes automatically from Toronto's official API
+- **Vintage Aesthetics**: Authentic mid-century design with narrative storytelling
 
 ## Prerequisites
 
@@ -66,14 +60,11 @@ Choose which version you want to run:
 # Make sure conda environment is activated first
 conda activate bikeshare_streamlit
 
-# Run the main compact vintage app (recommended)
+# Run the authentic vintage poster app (recommended)
+streamlit run poster_app.py
+
+# OR run the compact vintage app
 streamlit run app.py
-
-# OR run the modern professional version
-streamlit run modern_app.py
-
-# OR run the simple vintage version
-streamlit run simple_vintage_app.py
 ```
 
 ## Usage
@@ -81,24 +72,38 @@ streamlit run simple_vintage_app.py
 1. **Launch the App**: The dashboard will open in your default web browser
 2. **View Overview**: See real-time metrics and station map
 3. **Find a Bike/Dock**: 
-   - Use the sidebar to enter your location
+   - Use the journey planning form (poster app) or sidebar (main app)
    - Choose whether you want to rent or return a bike
    - Select bike preferences (e-bike, mechanical, or both)
-   - Click "Find My Bike!" or "Find a Dock!"
-4. **Get Directions**: View the route and estimated walking time to your chosen station
+   - Click "Chart My Course" or "Find My Bike!"
+4. **Explore the Map**: Interactive network map with station details
 
 ## File Structure
 
 ```
 Toronto-BikeShare/
-├── app.py                    # Main compact vintage application
-├── modern_app.py             # Modern professional design
-├── simple_vintage_app.py     # Simple retro design
+├── poster_app.py             # Authentic vintage transit poster design ⭐
+├── app.py                    # Compact vintage application
 ├── helper.py                 # Utility functions for data processing
 ├── environment-windows.yml   # Conda environment configuration
 ├── requirements.txt          # Python package dependencies
 └── README.md                # This file
 ```
+
+## Design Philosophy
+
+### Authentic Vintage Transit Poster (`poster_app.py`)
+- **Emotional Goals**: Nostalgia, trust, warmth, wonder
+- **Typography**: 3-font system (Bebas Neue, Crimson Text, Special Elite)
+- **Color Palette**: Aged paper (#FAF7F0), heritage blue (#2E5C8A), vintage green (#4A7C59)
+- **Layout**: Organic, poster-inspired asymmetrical design
+- **Narrative**: Story-driven content framing data as urban adventure
+
+### Compact Vintage (`app.py`)
+- **Optimized spacing** for single-page viewing
+- **Sidebar navigation** for clean interface
+- **Real e-bike data** integration
+- **Functional focus** with vintage styling
 
 ## Key Functions
 
@@ -110,13 +115,6 @@ Toronto-BikeShare/
 - `get_bike_availability()`: Find nearest available bikes by type
 - `get_dock_availability()`: Find nearest available docks
 - `run_osrm()`: Calculate walking routes and times
-
-### User Interface Features
-- Interactive dashboard with real-time metrics
-- Sidebar controls for user input
-- Dynamic map generation with Folium
-- Route visualization and travel time calculation
-- Multiple design themes for different preferences
 
 ## API Endpoints
 
@@ -146,12 +144,6 @@ The app uses Toronto's official Bike Share API:
 
 4. **Map Not Loading**: Try refreshing the page or clearing browser cache
 
-### Performance Tips
-
-- The app automatically caches data for better performance
-- Use the sidebar "Find" functionality to locate specific bikes
-- For better route calculation, ensure your address is as specific as possible
-
 ## Dependencies
 
 Key packages used in this application:
@@ -161,22 +153,11 @@ Key packages used in this application:
 - **Requests**: API communication
 - **GeoPy**: Geocoding and distance calculations
 
-## Design Themes
+## Design Inspiration
 
-### Compact Vintage (app.py)
-- Optimized spacing for single-page viewing
-- Vintage transit poster aesthetic
-- Sidebar navigation
-- Real e-bike data integration
-
-### Modern Professional (modern_app.py)
-- Clean, minimalist design
-- High contrast accessibility
-- Bento-box grid layout
-- Mobile-responsive design
-
-### Simple Vintage (simple_vintage_app.py)
-- Mid-century travel poster inspiration
-- Retro color palette and typography
-- Simplified vintage interface
-- Nostalgic user experience
+The vintage poster design draws inspiration from:
+- 1950s-60s National Parks posters
+- Vintage railway and subway signage
+- Mid-century editorial design
+- Urban planning documents from the "golden age" of public transit
+- Hand-printed letterpress posters
