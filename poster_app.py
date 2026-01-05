@@ -474,38 +474,45 @@ STATION_STATUS_URL = 'https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_st
 STATION_INFO_URL = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information"
 
 def get_toronto_time():
-    """Get current Toronto time with explicit UTC handling for Streamlit Cloud"""
-    # Force UTC time explicitly to avoid server timezone issues
-    import time
-    
-    # Method 1: Use UTC timestamp
-    utc_timestamp = time.time()
-    utc_dt = dt.datetime.fromtimestamp(utc_timestamp, tz=pytz.UTC)
-    
-    # Method 2: Alternative - force UTC from datetime
-    utc_now = dt.datetime.utcnow().replace(tzinfo=pytz.UTC)
-    
-    # Convert to Toronto timezone
-    toronto_tz = pytz.timezone('America/Toronto')
-    toronto_time = utc_now.astimezone(toronto_tz)
-    
-    return toronto_time
+    """Get current Toronto time - guaranteed to work on both local and Streamlit Cloud"""
+    # Use multiple methods to ensure we get correct UTC time
+    try:
+        # Method 1: Force UTC using utcnow() - most reliable for cloud deployments
+        utc_time = dt.datetime.utcnow()
+        utc_aware = pytz.UTC.localize(utc_time)
+        
+        # Convert to Toronto timezone
+        toronto_tz = pytz.timezone('America/Toronto')
+        toronto_time = utc_aware.astimezone(toronto_tz)
+        
+        return toronto_time
+    except Exception:
+        # Fallback method if above fails
+        import time
+        utc_timestamp = time.time()
+        utc_dt = dt.datetime.fromtimestamp(utc_timestamp, tz=pytz.UTC)
+        toronto_tz = pytz.timezone('America/Toronto')
+        return utc_dt.astimezone(toronto_tz)
 
 def format_toronto_time(toronto_time, format_string="%I:%M:%S %p"):
     """Format Toronto time with proper timezone label"""
-    # Determine if it's EST or EDT
+    # Determine if it's EST or EDT based on daylight saving
     timezone_name = "EST" if toronto_time.dst() == dt.timedelta(0) else "EDT"
     formatted_time = toronto_time.strftime(format_string)
     return f"{formatted_time} {timezone_name}"
 
-def get_current_toronto_time_string():
-    """Get current Toronto time as a formatted string - for debugging"""
-    toronto_time = get_toronto_time()
-    utc_time = dt.datetime.now(pytz.UTC)
-    
-    # Debug info
-    debug_info = f"UTC: {utc_time.strftime('%I:%M:%S %p')} | Toronto: {format_toronto_time(toronto_time)}"
-    return debug_info
+def get_debug_time_info():
+    """Get debug information about time conversion"""
+    try:
+        # Show what we're working with
+        utc_naive = dt.datetime.utcnow()
+        utc_aware = pytz.UTC.localize(utc_naive)
+        toronto_time = get_toronto_time()
+        
+        debug_info = f"UTC: {utc_aware.strftime('%I:%M %p')} → Toronto: {toronto_time.strftime('%I:%M %p')}"
+        return debug_info
+    except Exception as e:
+        return f"Debug error: {str(e)}"
 
 def create_poster_header():
     """Create authentic vintage transit poster header with live time"""
@@ -686,15 +693,14 @@ def create_sidebar_journey_finder(data):
     
     st.sidebar.markdown("---")
     
-    # Current time display (using centralized Toronto time function with debug)
+    # Current time display (consistent across local and Streamlit Cloud)
     toronto_time = get_toronto_time()
     timezone_name = "EST" if toronto_time.dst() == dt.timedelta(0) else "EDT"
     current_time = toronto_time.strftime("%I:%M %p")
     current_date = toronto_time.strftime("%B %d, %Y")
     
-    # Debug: Show UTC time for comparison
-    utc_now = dt.datetime.now(pytz.UTC)
-    debug_info = f"Server UTC: {utc_now.strftime('%I:%M %p')} | Toronto: {current_time}"
+    # Debug info to verify timezone conversion
+    debug_info = get_debug_time_info()
     
     st.sidebar.markdown(f'''
     <div style="
@@ -706,7 +712,7 @@ def create_sidebar_journey_finder(data):
         font-family: 'Special Elite', monospace;
         color: #2C2416;
     ">
-        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Current Time ({timezone_name})</div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Toronto Time ({timezone_name})</div>
         <div style="font-size: 1.2rem; font-weight: bold;">{current_time}</div>
         <div style="font-size: 0.7rem; opacity: 0.7;">{current_date}</div>
         <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Live Transit Data</div>
@@ -939,9 +945,9 @@ def create_network_map(data):
         st.markdown(f"**{empty_stations} stations** currently without bicycles")
 
 def create_footer():
-    """Create vintage transit authority footer with live time"""
+    """Create vintage transit authority footer with consistent Toronto time"""
     
-    # Use the centralized Toronto time function
+    # Use the robust Toronto time function
     toronto_time = get_toronto_time()
     current_time = format_toronto_time(toronto_time)
     
