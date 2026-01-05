@@ -11,6 +11,7 @@ import folium
 from streamlit_folium import st_folium
 from helper import *
 import time
+import pytz
 
 # Configure Streamlit page
 st.set_page_config(
@@ -473,8 +474,10 @@ STATION_STATUS_URL = 'https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_st
 STATION_INFO_URL = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information"
 
 def create_poster_header():
-    """Create authentic vintage transit poster header"""
-    current_time = dt.datetime.now().strftime("%A, %B %d, %Y")
+    """Create authentic vintage transit poster header with live time"""
+    # Calculate current time in Eastern timezone
+    eastern = pytz.timezone('America/Toronto')
+    current_time = dt.datetime.now(eastern).strftime("%A, %B %d, %Y")
     
     st.markdown(f'''
     <div class="poster-header">
@@ -645,9 +648,10 @@ def create_sidebar_journey_finder(data):
     
     st.sidebar.markdown("---")
     
-    # Current time display (dynamic)
-    current_time = dt.datetime.now().strftime("%I:%M %p")
-    current_date = dt.datetime.now().strftime("%B %d, %Y")
+    # Current time display (dynamic with Eastern timezone)
+    eastern = pytz.timezone('America/Toronto')
+    current_time = dt.datetime.now(eastern).strftime("%I:%M %p")
+    current_date = dt.datetime.now(eastern).strftime("%B %d, %Y")
     st.sidebar.markdown(f'''
     <div style="
         background: #FAF7F0; 
@@ -658,7 +662,7 @@ def create_sidebar_journey_finder(data):
         font-family: 'Special Elite', monospace;
         color: #2C2416;
     ">
-        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Current Time</div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Current Time (EST)</div>
         <div style="font-size: 1.2rem; font-weight: bold;">{current_time}</div>
         <div style="font-size: 0.7rem; opacity: 0.7;">{current_date}</div>
         <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Live Transit Data</div>
@@ -890,9 +894,11 @@ def create_network_map(data):
         st.markdown(f"**{empty_stations} stations** currently without bicycles")
 
 def create_footer():
-    """Create vintage transit authority footer"""
+    """Create vintage transit authority footer with live time"""
     
-    current_time = dt.datetime.now().strftime("%I:%M:%S %p")
+    # Calculate current time in Eastern timezone
+    eastern = pytz.timezone('America/Toronto')
+    current_time = dt.datetime.now(eastern).strftime("%I:%M:%S %p EST")
     
     st.markdown("---")
     
@@ -957,8 +963,9 @@ def main():
             st.session_state.last_update = time.time()
             st.rerun()
     
-    # Show last update time
-    last_update_time = dt.datetime.fromtimestamp(st.session_state.last_update).strftime("%I:%M:%S %p")
+    # Show last update time in Eastern timezone
+    eastern = pytz.timezone('America/Toronto')
+    last_update_time = dt.datetime.fromtimestamp(st.session_state.last_update, tz=eastern).strftime("%I:%M:%S %p EST")
     st.markdown(f'<div style="text-align: center; font-family: \'Special Elite\', monospace; font-size: 0.8rem; color: #6B5D4F; margin-top: 1rem;">Last updated: {last_update_time} • Auto-refresh in {30 - int(current_time - st.session_state.last_update)} seconds</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
