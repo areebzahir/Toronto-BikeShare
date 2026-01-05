@@ -10,6 +10,7 @@ import datetime as dt
 import folium
 from streamlit_folium import st_folium
 from helper import *
+import time
 
 # Configure Streamlit page
 st.set_page_config(
@@ -644,8 +645,9 @@ def create_sidebar_journey_finder(data):
     
     st.sidebar.markdown("---")
     
-    # Current time display
+    # Current time display (dynamic)
     current_time = dt.datetime.now().strftime("%I:%M %p")
+    current_date = dt.datetime.now().strftime("%B %d, %Y")
     st.sidebar.markdown(f'''
     <div style="
         background: #FAF7F0; 
@@ -658,7 +660,8 @@ def create_sidebar_journey_finder(data):
     ">
         <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Current Time</div>
         <div style="font-size: 1.2rem; font-weight: bold;">{current_time}</div>
-        <div style="font-size: 0.7rem; opacity: 0.7;">Live Transit Data</div>
+        <div style="font-size: 0.7rem; opacity: 0.7;">{current_date}</div>
+        <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Live Transit Data</div>
     </div>
     ''', unsafe_allow_html=True)
     
@@ -909,6 +912,16 @@ def create_footer():
 def main():
     """Main application with narrative flow"""
     
+    # Add auto-refresh functionality
+    if 'last_update' not in st.session_state:
+        st.session_state.last_update = time.time()
+    
+    # Auto-refresh every 30 seconds
+    current_time = time.time()
+    if current_time - st.session_state.last_update > 30:
+        st.session_state.last_update = current_time
+        st.rerun()
+    
     # Create poster header
     create_poster_header()
     
@@ -936,6 +949,17 @@ def main():
     
     # Footer
     create_footer()
+    
+    # Add refresh button and auto-refresh timer
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("🔄 Refresh Data", key="refresh_btn", use_container_width=True):
+            st.session_state.last_update = time.time()
+            st.rerun()
+    
+    # Show last update time
+    last_update_time = dt.datetime.fromtimestamp(st.session_state.last_update).strftime("%I:%M:%S %p")
+    st.markdown(f'<div style="text-align: center; font-family: \'Special Elite\', monospace; font-size: 0.8rem; color: #6B5D4F; margin-top: 1rem;">Last updated: {last_update_time} • Auto-refresh in {30 - int(current_time - st.session_state.last_update)} seconds</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
