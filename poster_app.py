@@ -473,17 +473,35 @@ st.markdown("""
 STATION_STATUS_URL = 'https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_status.json'
 STATION_INFO_URL = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information"
 
+def get_toronto_time():
+    """Get current Toronto time with proper timezone handling"""
+    # Always start with UTC time to ensure consistency across servers
+    utc_now = dt.datetime.now(pytz.UTC)
+    # Convert to Toronto timezone (handles EST/EDT automatically)
+    toronto_tz = pytz.timezone('America/Toronto')
+    toronto_time = utc_now.astimezone(toronto_tz)
+    return toronto_time
+
+def format_toronto_time(toronto_time, format_string="%I:%M:%S %p"):
+    """Format Toronto time with proper timezone label"""
+    # Determine if it's EST or EDT
+    timezone_name = "EST" if toronto_time.dst() == dt.timedelta(0) else "EDT"
+    formatted_time = toronto_time.strftime(format_string)
+    return f"{formatted_time} {timezone_name}"
+
 def create_poster_header():
     """Create authentic vintage transit poster header with live time"""
-    # Get UTC time first, then convert to Eastern timezone
-    utc_now = dt.datetime.now(pytz.UTC)
-    eastern = pytz.timezone('America/Toronto')
-    eastern_time = utc_now.astimezone(eastern)
-    current_time = eastern_time.strftime("%A, %B %d, %Y")
+    # Use the centralized Toronto time function
+    toronto_time = get_toronto_time()
+    current_date = toronto_time.strftime("%A, %B %d, %Y")
     
     st.markdown(f'''
     <div class="poster-header">
         <div class="poster-title">Toronto Bike Share</div>
+        <div class="poster-subtitle">Your Gateway to Urban Adventure</div>
+        <div class="poster-meta">Bike Share Dashboard Project • {current_date}</div>
+    </div>
+    ''', unsafe_allow_html=True)
         <div class="poster-subtitle">Your Gateway to Urban Adventure</div>
         <div class="poster-meta">Bike Share Dashboard Project • {current_time}</div>
     </div>
@@ -650,15 +668,11 @@ def create_sidebar_journey_finder(data):
     
     st.sidebar.markdown("---")
     
-    # Current time display (proper UTC to Eastern conversion)
-    utc_now = dt.datetime.now(pytz.UTC)
-    eastern = pytz.timezone('America/Toronto')
-    eastern_time = utc_now.astimezone(eastern)
-    
-    # Determine if it's EST or EDT
-    timezone_name = "EST" if eastern_time.dst() == dt.timedelta(0) else "EDT"
-    current_time = eastern_time.strftime("%I:%M %p")
-    current_date = eastern_time.strftime("%B %d, %Y")
+    # Current time display (using centralized Toronto time function)
+    toronto_time = get_toronto_time()
+    timezone_name = "EST" if toronto_time.dst() == dt.timedelta(0) else "EDT"
+    current_time = toronto_time.strftime("%I:%M %p")
+    current_date = toronto_time.strftime("%B %d, %Y")
     
     st.sidebar.markdown(f'''
     <div style="
@@ -904,14 +918,9 @@ def create_network_map(data):
 def create_footer():
     """Create vintage transit authority footer with live time"""
     
-    # Get UTC time first, then convert to Eastern timezone
-    utc_now = dt.datetime.now(pytz.UTC)
-    eastern = pytz.timezone('America/Toronto')
-    eastern_time = utc_now.astimezone(eastern)
-    
-    # Determine if it's EST or EDT
-    timezone_name = "EST" if eastern_time.dst() == dt.timedelta(0) else "EDT"
-    current_time = eastern_time.strftime(f"%I:%M:%S %p {timezone_name}")
+    # Use the centralized Toronto time function
+    toronto_time = get_toronto_time()
+    current_time = format_toronto_time(toronto_time)
     
     st.markdown("---")
     
