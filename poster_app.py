@@ -11,7 +11,6 @@ import folium
 from streamlit_folium import st_folium
 from helper import *
 import time
-import pytz
 
 # Configure Streamlit page
 st.set_page_config(
@@ -473,58 +472,14 @@ st.markdown("""
 STATION_STATUS_URL = 'https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_status.json'
 STATION_INFO_URL = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information"
 
-def get_toronto_time():
-    """Get current Toronto time - guaranteed to work on both local and Streamlit Cloud"""
-    # Use multiple methods to ensure we get correct UTC time
-    try:
-        # Method 1: Force UTC using utcnow() - most reliable for cloud deployments
-        utc_time = dt.datetime.utcnow()
-        utc_aware = pytz.UTC.localize(utc_time)
-        
-        # Convert to Toronto timezone
-        toronto_tz = pytz.timezone('America/Toronto')
-        toronto_time = utc_aware.astimezone(toronto_tz)
-        
-        return toronto_time
-    except Exception:
-        # Fallback method if above fails
-        import time
-        utc_timestamp = time.time()
-        utc_dt = dt.datetime.fromtimestamp(utc_timestamp, tz=pytz.UTC)
-        toronto_tz = pytz.timezone('America/Toronto')
-        return utc_dt.astimezone(toronto_tz)
-
-def format_toronto_time(toronto_time, format_string="%I:%M:%S %p"):
-    """Format Toronto time with proper timezone label"""
-    # Determine if it's EST or EDT based on daylight saving
-    timezone_name = "EST" if toronto_time.dst() == dt.timedelta(0) else "EDT"
-    formatted_time = toronto_time.strftime(format_string)
-    return f"{formatted_time} {timezone_name}"
-
-def get_debug_time_info():
-    """Get debug information about time conversion"""
-    try:
-        # Show what we're working with
-        utc_naive = dt.datetime.utcnow()
-        utc_aware = pytz.UTC.localize(utc_naive)
-        toronto_time = get_toronto_time()
-        
-        debug_info = f"UTC: {utc_aware.strftime('%I:%M %p')} → Toronto: {toronto_time.strftime('%I:%M %p')}"
-        return debug_info
-    except Exception as e:
-        return f"Debug error: {str(e)}"
-
 def create_poster_header():
-    """Create authentic vintage transit poster header with live time"""
-    # Use the centralized Toronto time function
-    toronto_time = get_toronto_time()
-    current_date = toronto_time.strftime("%A, %B %d, %Y")
+    """Create authentic vintage transit poster header"""
     
     st.markdown(f'''
     <div class="poster-header">
         <div class="poster-title">Toronto Bike Share</div>
         <div class="poster-subtitle">Your Gateway to Urban Adventure</div>
-        <div class="poster-meta">Bike Share Dashboard Project • {current_date}</div>
+        <div class="poster-meta">Bike Share Dashboard Project</div>
     </div>
     ''', unsafe_allow_html=True)
         <div class="poster-subtitle">Your Gateway to Urban Adventure</div>
@@ -693,30 +648,21 @@ def create_sidebar_journey_finder(data):
     
     st.sidebar.markdown("---")
     
-    # Current time display (consistent across local and Streamlit Cloud)
-    toronto_time = get_toronto_time()
-    timezone_name = "EST" if toronto_time.dst() == dt.timedelta(0) else "EDT"
-    current_time = toronto_time.strftime("%I:%M %p")
-    current_date = toronto_time.strftime("%B %d, %Y")
-    
-    # Debug info to verify timezone conversion
-    debug_info = get_debug_time_info()
-    
+    # Status indicator instead of time
     st.sidebar.markdown(f'''
     <div style="
         background: #FAF7F0; 
-        border: 2px dashed #2E5C8A; 
+        border: 2px dashed #4A7C59; 
         padding: 1rem; 
         text-align: center; 
         margin: 1rem 0;
         font-family: 'Special Elite', monospace;
         color: #2C2416;
     ">
-        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Toronto Time ({timezone_name})</div>
-        <div style="font-size: 1.2rem; font-weight: bold;">{current_time}</div>
-        <div style="font-size: 0.7rem; opacity: 0.7;">{current_date}</div>
-        <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Live Transit Data</div>
-        <div style="font-size: 0.5rem; opacity: 0.5; margin-top: 0.5rem; color: #C1492E;">{debug_info}</div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">System Status</div>
+        <div style="font-size: 1.2rem; font-weight: bold; color: #4A7C59;">🟢 ONLINE</div>
+        <div style="font-size: 0.7rem; opacity: 0.7;">Real-Time Data Active</div>
+        <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Toronto Bike Share Network</div>
     </div>
     ''', unsafe_allow_html=True)
     
@@ -945,11 +891,7 @@ def create_network_map(data):
         st.markdown(f"**{empty_stations} stations** currently without bicycles")
 
 def create_footer():
-    """Create vintage transit authority footer with consistent Toronto time"""
-    
-    # Use the robust Toronto time function
-    toronto_time = get_toronto_time()
-    current_time = format_toronto_time(toronto_time)
+    """Create vintage transit authority footer"""
     
     st.markdown("---")
     
@@ -961,7 +903,7 @@ def create_footer():
             Every journey matters, every ride builds a better city.
         </div>
         <div class="timestamp">
-            Live data updated at {current_time}
+            🔄 Live Data • Real-Time Network Status
         </div>
     </div>
     ''', unsafe_allow_html=True)
@@ -1007,23 +949,12 @@ def main():
     # Footer
     create_footer()
     
-    # Add refresh button and auto-refresh timer
+    # Add refresh button
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("🔄 Refresh Data", key="refresh_btn", use_container_width=True):
             st.session_state.last_update = time.time()
             st.rerun()
-    
-    # Show last update time in Eastern timezone (proper UTC conversion)
-    utc_timestamp = dt.datetime.fromtimestamp(st.session_state.last_update, tz=pytz.UTC)
-    eastern = pytz.timezone('America/Toronto')
-    eastern_time = utc_timestamp.astimezone(eastern)
-    
-    # Determine if it's EST or EDT
-    timezone_name = "EST" if eastern_time.dst() == dt.timedelta(0) else "EDT"
-    last_update_time = eastern_time.strftime(f"%I:%M:%S %p {timezone_name}")
-    
-    st.markdown(f'<div style="text-align: center; font-family: \'Special Elite\', monospace; font-size: 0.8rem; color: #6B5D4F; margin-top: 1rem;">Last updated: {last_update_time} • Auto-refresh in {30 - int(current_time - st.session_state.last_update)} seconds</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
