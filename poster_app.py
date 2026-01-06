@@ -6,9 +6,12 @@ A nostalgic 1950s-60s transit authority poster that evokes urban exploration
 import streamlit as st
 import requests
 import pandas as pd
+import datetime as dt
 import folium
 from streamlit_folium import st_folium
 from helper import *
+import time
+import pytz
 
 # Configure Streamlit page
 st.set_page_config(
@@ -470,14 +473,57 @@ st.markdown("""
 STATION_STATUS_URL = 'https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_status.json'
 STATION_INFO_URL = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information"
 
+def get_consistent_toronto_time():
+    """
+    Get Toronto time that's consistent across local and Streamlit Cloud
+    Uses explicit UTC conversion to avoid server timezone issues
+    """
+    # Force UTC time using multiple methods for reliability
+    try:
+        # Method 1: Use UTC timestamp (most reliable for cloud)
+        import time as time_module
+        utc_timestamp = time_module.time()
+        utc_dt = dt.datetime.utcfromtimestamp(utc_timestamp)
+        
+        # Make it timezone aware in UTC
+        utc_aware = pytz.UTC.localize(utc_dt)
+        
+        # Convert to Toronto timezone
+        toronto_tz = pytz.timezone('America/Toronto')
+        toronto_time = utc_aware.astimezone(toronto_tz)
+        
+        return toronto_time
+    except Exception:
+        # Fallback method
+        utc_now = dt.datetime.utcnow()
+        utc_aware = pytz.UTC.localize(utc_now)
+        toronto_tz = pytz.timezone('America/Toronto')
+        return utc_aware.astimezone(toronto_tz)
+
+def format_toronto_time(toronto_time, include_seconds=True):
+    """Format Toronto time with proper EST/EDT detection"""
+    # Determine timezone name based on daylight saving
+    is_dst = toronto_time.dst() != dt.timedelta(0)
+    timezone_name = "EDT" if is_dst else "EST"
+    
+    if include_seconds:
+        time_str = toronto_time.strftime("%I:%M:%S %p")
+    else:
+        time_str = toronto_time.strftime("%I:%M %p")
+    
+    return f"{time_str} {timezone_name}"
+
 def create_poster_header():
-    """Create authentic vintage transit poster header"""
+    """Create authentic vintage transit poster header with consistent time"""
+    # Get consistent Toronto time
+    toronto_time = get_consistent_toronto_time()
+    current_date = toronto_time.strftime("%A, %B %d, %Y")
     
     st.markdown(f'''
     <div class="poster-header">
         <div class="poster-title">Toronto Bike Share</div>
         <div class="poster-subtitle">Your Gateway to Urban Adventure</div>
-        <div class="poster-meta">Bike Share Dashboard Project</div>
+        <div class="poster-meta">Bike Share Dashboard Project • {current_date}</div>
     </div>
     ''', unsafe_allow_html=True)
 
@@ -642,21 +688,25 @@ def create_sidebar_journey_finder(data):
     
     st.sidebar.markdown("---")
     
-    # Status indicator instead of time
+    # Current time display with consistent Toronto time
+    toronto_time = get_consistent_toronto_time()
+    current_time = format_toronto_time(toronto_time, include_seconds=False)
+    current_date = toronto_time.strftime("%B %d, %Y")
+    
     st.sidebar.markdown(f'''
     <div style="
         background: #FAF7F0; 
-        border: 2px dashed #4A7C59; 
+        border: 2px dashed #2E5C8A; 
         padding: 1rem; 
         text-align: center; 
         margin: 1rem 0;
         font-family: 'Special Elite', monospace;
         color: #2C2416;
     ">
-        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">System Status</div>
-        <div style="font-size: 1.2rem; font-weight: bold; color: #4A7C59;">🟢 ONLINE</div>
-        <div style="font-size: 0.7rem; opacity: 0.7;">Live Data Active</div>
-        <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Toronto Bike Share Network</div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Toronto Time</div>
+        <div style="font-size: 1.2rem; font-weight: bold;">{current_time}</div>
+        <div style="font-size: 0.7rem; opacity: 0.7;">{current_date}</div>
+        <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Live Transit Data</div>
     </div>
     ''', unsafe_allow_html=True)
     
@@ -750,7 +800,7 @@ def display_route_result(user_location, chosen_station, data, action):
         <div class="hero-label">Journey Summary</div>
         <div style="font-family: 'Crimson Text', serif; font-size: 1.2rem; line-height: 1.8; margin: 1rem 0;">
             <strong>Destination:</strong> {station_name}<br>
-            <strong>Distance:</strong> Route calculated<br>
+            <strong>Walking Time:</strong> {duration}<br>
             <strong>Action:</strong> {'Rent your bicycle' if action == 'rent' else 'Return your bicycle'}
         </div>
         <div style="font-family: 'Bebas Neue', sans-serif; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em; color: #4A7C59;">
@@ -885,7 +935,11 @@ def create_network_map(data):
         st.markdown(f"**{empty_stations} stations** currently without bicycles")
 
 def create_footer():
-    """Create vintage transit authority footer"""
+    """Create vintage transit authority footer with consistent time"""
+    
+    # Get consistent Toronto time
+    toronto_time = get_consistent_toronto_time()
+    current_time = format_toronto_time(toronto_time, include_seconds=True)
     
     st.markdown("---")
     
@@ -897,13 +951,23 @@ def create_footer():
             Every journey matters, every ride builds a better city.
         </div>
         <div class="timestamp">
-            🔄 Live Data • Network Status Active
+            Live data updated at {current_time}
         </div>
     </div>
     ''', unsafe_allow_html=True)
 
 def main():
     """Main application with narrative flow"""
+    
+    # Add session state for refresh tracking
+    if 'last_update' not in st.session_state:
+        st.session_state.last_update = time.time()
+    
+    # Auto-refresh every 30 seconds
+    current_timestamp = time.time()
+    if current_timestamp - st.session_state.last_update > 30:
+        st.session_state.last_update = current_timestamp
+        st.rerun()
     
     # Create poster header
     create_poster_header()
@@ -933,11 +997,22 @@ def main():
     # Footer
     create_footer()
     
-    # Add refresh button
+    # Add refresh button and last update info
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("🔄 Refresh Data", key="refresh_btn", use_container_width=True):
+            st.session_state.last_update = time.time()
             st.rerun()
+    
+    # Show last update time
+    last_update_toronto = dt.datetime.fromtimestamp(st.session_state.last_update)
+    last_update_toronto = pytz.UTC.localize(last_update_toronto).astimezone(pytz.timezone('America/Toronto'))
+    last_update_str = format_toronto_time(last_update_toronto, include_seconds=True)
+    
+    seconds_since = int(current_timestamp - st.session_state.last_update)
+    next_refresh = max(0, 30 - seconds_since)
+    
+    st.markdown(f'<div style="text-align: center; font-family: \'Special Elite\', monospace; font-size: 0.8rem; color: #6B5D4F; margin-top: 1rem;">Last updated: {last_update_str} • Auto-refresh in {next_refresh} seconds</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
