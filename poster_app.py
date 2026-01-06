@@ -6,11 +6,9 @@ A nostalgic 1950s-60s transit authority poster that evokes urban exploration
 import streamlit as st
 import requests
 import pandas as pd
-import datetime as dt
 import folium
 from streamlit_folium import st_folium
 from helper import *
-import time
 
 # Configure Streamlit page
 st.set_page_config(
@@ -482,10 +480,6 @@ def create_poster_header():
         <div class="poster-meta">Bike Share Dashboard Project</div>
     </div>
     ''', unsafe_allow_html=True)
-        <div class="poster-subtitle">Your Gateway to Urban Adventure</div>
-        <div class="poster-meta">Bike Share Dashboard Project • {current_time}</div>
-    </div>
-    ''', unsafe_allow_html=True)
 
 def create_story_introduction():
     """Create narrative introduction"""
@@ -661,7 +655,7 @@ def create_sidebar_journey_finder(data):
     ">
         <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">System Status</div>
         <div style="font-size: 1.2rem; font-weight: bold; color: #4A7C59;">🟢 ONLINE</div>
-        <div style="font-size: 0.7rem; opacity: 0.7;">Real-Time Data Active</div>
+        <div style="font-size: 0.7rem; opacity: 0.7;">Live Data Active</div>
         <div style="font-size: 0.6rem; opacity: 0.6; margin-top: 0.5rem;">Toronto Bike Share Network</div>
     </div>
     ''', unsafe_allow_html=True)
@@ -690,7 +684,7 @@ def create_sidebar_journey_finder(data):
         <div style="font-size: 0.9rem; line-height: 1.6; color: #2C2416;">
             <p style="margin: 0.5rem 0;">📍 <strong>Popular Areas:</strong> Entertainment District, Harbourfront</p>
             <p style="margin: 0.5rem 0;">⚡ <strong>E-bikes:</strong> Limited in winter months</p>
-            <p style="margin: 0.5rem 0;">🗺️ <strong>Check Map:</strong> Real-time availability below</p>
+            <p style="margin: 0.5rem 0;">🗺️ <strong>Check Map:</strong> Live availability below</p>
             <p style="margin: 0.5rem 0;">🔒 <strong>Returns:</strong> Ensure dock availability</p>
         </div>
     </div>
@@ -756,7 +750,7 @@ def display_route_result(user_location, chosen_station, data, action):
         <div class="hero-label">Journey Summary</div>
         <div style="font-family: 'Crimson Text', serif; font-size: 1.2rem; line-height: 1.8; margin: 1rem 0;">
             <strong>Destination:</strong> {station_name}<br>
-            <strong>Walking Time:</strong> {duration}<br>
+            <strong>Distance:</strong> Route calculated<br>
             <strong>Action:</strong> {'Rent your bicycle' if action == 'rent' else 'Return your bicycle'}
         </div>
         <div style="font-family: 'Bebas Neue', sans-serif; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em; color: #4A7C59;">
@@ -903,23 +897,13 @@ def create_footer():
             Every journey matters, every ride builds a better city.
         </div>
         <div class="timestamp">
-            🔄 Live Data • Real-Time Network Status
+            🔄 Live Data • Network Status Active
         </div>
     </div>
     ''', unsafe_allow_html=True)
 
 def main():
     """Main application with narrative flow"""
-    
-    # Add auto-refresh functionality
-    if 'last_update' not in st.session_state:
-        st.session_state.last_update = time.time()
-    
-    # Auto-refresh every 30 seconds
-    current_time = time.time()
-    if current_time - st.session_state.last_update > 30:
-        st.session_state.last_update = current_time
-        st.rerun()
     
     # Create poster header
     create_poster_header()
@@ -953,7 +937,6 @@ def main():
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("🔄 Refresh Data", key="refresh_btn", use_container_width=True):
-            st.session_state.last_update = time.time()
             st.rerun()
 
 if __name__ == "__main__":
